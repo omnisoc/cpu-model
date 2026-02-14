@@ -1,0 +1,23 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
+# The set of languages for which implicit dependencies are needed:
+set(CMAKE_DEPENDS_LANGUAGES
+  )
+
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/leo/leo/workspace/cpu-model/src/IR/tcg.cpp" "CMakeFiles/riscv_emu.dir/src/IR/tcg.cpp.o" "gcc" "CMakeFiles/riscv_emu.dir/src/IR/tcg.cpp.o.d"
+  "/home/leo/leo/workspace/cpu-model/src/arch/riscv.cpp" "CMakeFiles/riscv_emu.dir/src/arch/riscv.cpp.o" "gcc" "CMakeFiles/riscv_emu.dir/src/arch/riscv.cpp.o.d"
+  "/home/leo/leo/workspace/cpu-model/src/emulator.cpp" "CMakeFiles/riscv_emu.dir/src/emulator.cpp.o" "gcc" "CMakeFiles/riscv_emu.dir/src/emulator.cpp.o.d"
+  "/home/leo/leo/workspace/cpu-model/src/main.cpp" "CMakeFiles/riscv_emu.dir/src/main.cpp.o" "gcc" "CMakeFiles/riscv_emu.dir/src/main.cpp.o.d"
+  "/home/leo/leo/workspace/cpu-model/src/target/host_x86_64.cpp" "CMakeFiles/riscv_emu.dir/src/target/host_x86_64.cpp.o" "gcc" "CMakeFiles/riscv_emu.dir/src/target/host_x86_64.cpp.o.d"
+  )
+
+# Targets to which this target links.
+set(CMAKE_TARGET_LINKED_INFO_FILES
+  )
+
+# Fortran module output directory.
+set(CMAKE_Fortran_TARGET_MODULE_DIR "")
