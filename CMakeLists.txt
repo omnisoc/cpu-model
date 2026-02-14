@@ -17,6 +17,7 @@ set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/target/host_x86_64.cpp
 )
 
-add_executable(riscv_emu ${SOURCES})
-target_include_directories(riscv_emu PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(riscv_emu PRIVATE pthread)
+add_executable(cpu_emu ${SOURCES})
+target_include_directories(cpu_emu PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(cpu_emu PRIVATE pthread)
+

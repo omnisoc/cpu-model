@@ -9,7 +9,7 @@ ROOT_DIR=$(cd "$(dirname "$0")/..";pwd)
 BUILD_DIR="${ROOT_DIR}/build"
 BIN_DIR="${ROOT_DIR}/bin"
 TEST_DIR="${ROOT_DIR}/test"
-EMULATOR="${BIN_DIR}/riscv_emu"
+EMULATOR="${BIN_DIR}/cpu_emu"
 
 # ---------------------------------------------------------
 # 内部函数: Build
@@ -58,7 +58,7 @@ do_action() {
     local TEST_NAME=$(basename "$TEST_ELF" .elf)
 
     if [ ! -f "$EMULATOR" ]; then
-        echo -e "${RED}Error: Emulator not found.${NC}"
+        echo -e "${RED}Error: Emulator not found at ${EMULATOR}${NC}"
         return 1
     fi
 
@@ -80,7 +80,6 @@ do_action() {
 # ---------------------------------------------------------
 clean_tests() {
     echo -e "${YELLOW}Cleaning test artifacts...${NC}"
-    # 只删除 build 目录下的 .elf 和 .o 文件，保留目录和其他文件
     if [ -d "$BUILD_DIR" ]; then
         rm -f "$BUILD_DIR"/*.elf "$BUILD_DIR"/*.o
         echo -e "${GREEN}Test artifacts cleaned.${NC}"
@@ -115,6 +114,7 @@ show_menu() {
             fi
         done
 
+        # --- 修复点：此处必须是 ] ---
         if [ ${#TEST_DIRS[@]} -eq 0 ]; then
             echo -e "${RED}No tests found.${NC}"
             exit 1
@@ -138,7 +138,7 @@ show_menu() {
                 if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#TEST_DIRS[@]} ]; then
                     local selected_name="${TEST_DIRS[$choice]}"
                     
-                    # 1. 编译 (直接调用，日志正常显示)
+                    # 1. 编译
                     build_test "$selected_name"
                     
                     # 2. 根据模式执行
@@ -155,7 +155,7 @@ show_menu() {
 }
 
 # ---------------------------------------------------------
-# 入口：仅支持 test 和 gdb
+# 入口
 # ---------------------------------------------------------
 mkdir -p "$BUILD_DIR"
 
@@ -164,7 +164,6 @@ TARGET=$2
 
 case "$CMD" in
     test)
-        # test <name>: 编译 + 运行
         if [ -n "$TARGET" ]; then
             build_test "$TARGET"
             [ -n "$LAST_BUILD_ELF" ] && do_action "test" "$LAST_BUILD_ELF"
@@ -173,7 +172,6 @@ case "$CMD" in
         fi
         ;;
     gdb)
-        # gdb <name>: 编译 + 调试
         if [ -n "$TARGET" ]; then
             build_test "$TARGET"
             [ -n "$LAST_BUILD_ELF" ] && do_action "gdb" "$LAST_BUILD_ELF"
@@ -182,7 +180,6 @@ case "$CMD" in
         fi
         ;;
     *)
-        # 默认显示 test 菜单
         show_menu "test"
         ;;
 esac
