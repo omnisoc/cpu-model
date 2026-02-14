@@ -16,6 +16,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/emulator.cpp
+    ${CMAKE_SOURCE_DIR}/src/elf_loader.cpp
 )
 
 # 生成可执行文件

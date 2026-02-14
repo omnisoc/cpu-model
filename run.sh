@@ -15,55 +15,28 @@ TEST_DIR="${ROOT_DIR}/test"
 # 清理函数
 clean() {
     echo -e "${YELLOW}正在清理构建产物...${NC}"
-    
-    # 清理 CMake 构建目录
-    if [ -d "$BUILD_DIR" ]; then
-        rm -rf "$BUILD_DIR"
-        echo "已删除: ${BUILD_DIR}"
-    fi
-    
-    # 清理可执行文件目录
-    if [ -d "$BIN_DIR" ]; then
-        rm -rf "$BIN_DIR"
-        echo "已删除: ${BIN_DIR}"
-    fi
-    
-    # 清理 test 目录下的中间文件 (如果有)
-    if [ -f "${TEST_DIR}/Makefile" ]; then
-        cd "$TEST_DIR" && make clean > /dev/null 2>&1
-        cd "$ROOT_DIR"
-    fi
-    
+    if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
+    if [ -d "$BIN_DIR" ]; then rm -rf "$BIN_DIR"; fi
+    # 清理 test 目录下的 elf 文件
+    rm -f "${TEST_DIR}"/*.elf
     echo -e "${GREEN}清理完成！${NC}"
 }
 
 # 编译函数
 build() {
     echo -e "${YELLOW}[1/2] 正在编译模拟器...${NC}"
-    
-    # 创建构建目录
-    if [ ! -d "$BUILD_DIR" ]; then
-        mkdir -p "$BUILD_DIR"
-    fi
-    
-    # 进入构建目录执行 cmake 和 make
+    if [ ! -d "$BUILD_DIR" ]; then mkdir -p "$BUILD_DIR"; fi
     cd "$BUILD_DIR" || exit 1
-    
-    # cmake 输出重定向到 /dev/null，保持界面整洁，如有错误则显示
     if ! cmake .. > /dev/null; then
         echo -e "${RED}CMake 配置失败！${NC}"
-        cmake .. # 再次运行以显示错误信息
+        cmake ..
         exit 1
     fi
-    
-    # 关键修改：直接运行 make，根据返回值判断成功与否
-    # 警告信息会正常显示在屏幕上，但不会导致脚本退出
     if make; then
-        # 再次确认可执行文件是否存在
         if [ -f "${BIN_DIR}/riscv_emu" ]; then
-            echo -e "${GREEN}编译成功！可执行文件位于: ${BIN_DIR}/riscv_emu${NC}"
+            echo -e "${GREEN}模拟器编译成功: ${BIN_DIR}/riscv_emu${NC}"
         else
-            echo -e "${RED}编译过程未报错，但未生成可执行文件！${NC}"
+            echo -e "${RED}未生成可执行文件！${NC}"
             exit 1
         fi
     else
@@ -78,41 +51,39 @@ test() {
     
     local EMULATOR="${BIN_DIR}/riscv_emu"
     local TEST_SRC="${TEST_DIR}/test.s"
-    local TEST_BIN="${BUILD_DIR}/test.bin" # 中间文件放在 build 目录
+    # 修改：直接生成并使用 .elf 文件
+    local TEST_ELF="${BUILD_DIR}/test.elf" 
 
-    # 1. 检查模拟器是否存在
     if [ ! -f "$EMULATOR" ]; then
         echo -e "${RED}错误: 找不到模拟器，请先运行 './run.sh build'${NC}"
         exit 1
     fi
 
-    # 2. 检查测试目录是否存在 Makefile
-    if [ ! -f "${TEST_DIR}/Makefile" ]; then
-        echo -e "${RED}错误: test/ 目录下缺少 Makefile${NC}"
+    if [ ! -f "$TEST_SRC" ]; then
+        echo -e "${RED}错误: 找不到测试源码 ${TEST_SRC}${NC}"
         exit 1
     fi
 
-    # 3. 编译测试程序 (进入 test 目录编译)
-    echo "正在编译测试程序..."
-    cd "$TEST_DIR" || exit 1
-    make clean > /dev/null 2>&1
-    if ! make; then
-        echo -e "${RED}测试程序编译失败！${NC}"
-        exit 1
-    fi
-    cd "$ROOT_DIR" || exit 1
-
-    # 4. 将生成的 bin 移动到 build 目录 (保持项目整洁)
-    if [ -f "${TEST_DIR}/test.bin" ]; then
-        mv "${TEST_DIR}/test.bin" "$TEST_BIN"
-    else
-        echo -e "${RED}错误: test.bin 生成失败${NC}"
+    # 1. 编译测试程序为 ELF (不再需要 Makefile，直接调用工具链)
+    echo "正在编译测试程序 -> ${TEST_ELF}"
+    
+    # 检查工具链是否存在
+    if ! command -v riscv64-unknown-elf-as &> /dev/null; then
+        echo -e "${RED}错误: 未找到 riscv64-unknown-elf-as，请安装 RISC-V 工具链${NC}"
         exit 1
     fi
 
-    # 5. 运行模拟器
+    # 汇编并链接 (生成 ELF)
+    riscv64-unknown-elf-as -o "${BUILD_DIR}/test.o" "${TEST_SRC}"
+    if [ $? -ne 0 ]; then echo -e "${RED}汇编失败${NC}"; exit 1; fi
+    
+    # 链接时指定代码段起始地址，保持与旧测试一致
+    riscv64-unknown-elf-ld -Ttext=0x10000 -o "$TEST_ELF" "${BUILD_DIR}/test.o"
+    if [ $? -ne 0 ]; then echo -e "${RED}链接失败${NC}"; exit 1; fi
+
+    # 2. 运行模拟器
     echo -e "\n${GREEN}========== 运行模拟器 ==========${NC}"
-    "$EMULATOR" "$TEST_BIN"
+    "$EMULATOR" "$TEST_ELF"
 }
 
 # 主逻辑
