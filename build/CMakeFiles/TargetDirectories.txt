@@ -1,3 +1,0 @@
-/home/leo/leo/workspace/cpu-model/build/CMakeFiles/riscv_emu.dir
-/home/leo/leo/workspace/cpu-model/build/CMakeFiles/edit_cache.dir
-/home/leo/leo/workspace/cpu-model/build/CMakeFiles/rebuild_cache.dir
