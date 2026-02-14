@@ -3,7 +3,7 @@ The cpu-model is the core component of the OmniSoC project. It is a CPU model fr
 
 # Quick Start
 
-'''bash
+```bash
 run.sh build                  # Build porj
 run.sh test                   # test case
-'''
+```
