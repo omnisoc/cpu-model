@@ -7,4 +7,5 @@ The cpu-model is the core component of the OmniSoC project. It is a CPU model fr
 ./run.sh clean                  # clean build
 ./run.sh build                  # Build porj
 ./run.sh test                   # test case
+./run.sh gdb                    # debug cpu Emulator
 ```
