@@ -6,40 +6,43 @@ NC='\033[0m'
 ROOT_DIR=$(cd "$(dirname "$0")";pwd)
 BUILD_DIR="${ROOT_DIR}/build"
 BIN_DIR="${ROOT_DIR}/bin"
-TEST_DIR="${ROOT_DIR}/test"
+TEST_SCRIPT="${ROOT_DIR}/test/run_test.sh"
 
 clean() {
     echo -e "${YELLOW}Cleaning...${NC}"
     rm -rf "$BUILD_DIR" "$BIN_DIR"
-    rm -f "${TEST_DIR}"/*.o "${TEST_DIR}"/*.elf
     echo -e "${GREEN}Clean Done.${NC}"
 }
 
-build() {
-    echo -e "${YELLOW}[1/2] Building Emulator...${NC}"
-    mkdir -p "$BUILD_DIR"
+build_emu() {
+    if [ ! -d "$BUILD_DIR" ]; then mkdir -p "$BUILD_DIR"; fi
     cd "$BUILD_DIR"
-    if ! cmake .. > /dev/null; then cmake ..; exit 1; fi
-    if make; then echo -e "${GREEN}Emulator Built: ${BIN_DIR}/riscv_emu${NC}"
-    else echo -e "${RED}Build Failed!${NC}"; exit 1; fi
-}
-
-test_run() {
-    echo -e "${YELLOW}[2/2] Running Test...${NC}"
-    local EMULATOR="${BIN_DIR}/riscv_emu"
-    local TEST_SRC="${TEST_DIR}/test.s"
-    local TEST_ELF="${BUILD_DIR}/test.elf"
-    if [ ! -f "$EMULATOR" ]; then exit 1; fi
-    echo "Compiling RISC-V test program..."
-    riscv64-unknown-elf-as -o "${BUILD_DIR}/test.o" "${TEST_SRC}"
-    riscv64-unknown-elf-ld -Ttext=0x10000 -o "$TEST_ELF" "${BUILD_DIR}/test.o"
-    echo -e "\n${GREEN}========== EXECUTING ==========${NC}"
-    "$EMULATOR" "$TEST_ELF"
+    if [ ! -f Makefile ]; then
+        if ! cmake .. > /dev/null; then cmake ..; exit 1; fi
+    fi
+    
+    echo -e "${YELLOW}Building Emulator...${NC}"
+    if make; then
+        echo -e "${GREEN}Emulator Built.${NC}"
+        return 0
+    else
+        echo -e "${RED}Emulator Build Failed!${NC}"
+        return 1
+    fi
 }
 
 case "$1" in
-    build) build ;;
-    test) build; test_run ;;
+    build) build_emu ;;
+    test) 
+        build_emu
+        shift
+        "$TEST_SCRIPT" test "$@"
+        ;;
+    gdb) 
+        build_emu
+        shift
+        "$TEST_SCRIPT" gdb "$@"
+        ;;
     clean) clean ;;
-    *) echo "Usage: $0 {build|test|clean}" ;;
+    *) echo "Usage: $0 {build|test [name]|gdb [name]|clean}" ;;
 esac
